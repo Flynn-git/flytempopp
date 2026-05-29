@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tempo Fly — Privacy Policy</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        max-width: 640px;
+        margin: 40px auto;
+        padding: 0 20px 60px;
+        color: #1f2937;
+        line-height: 1.55;
+      }
+      h1 { color: #2563eb; margin-bottom: 4px; }
+      .meta { color: #6b7280; font-size: 13px; margin-bottom: 28px; }
+      h2 { margin-top: 28px; font-size: 16px; }
+      code { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+      ul { padding-left: 20px; }
+      a { color: #2563eb; }
+    </style>
+  </head>
+  <body>
+    <h1>Tempo Fly</h1>
+    <div class="meta">Privacy policy — last updated 2026-05-29</div>
+
+    <p>
+      Tempo Fly is a Chrome extension that adjusts playback speed and pitch on
+      <a href="https://music.youtube.com">music.youtube.com</a>, detects the BPM
+      and key of the current track, and plays short sound effects on top of
+      playback.
+    </p>
+
+    <h2>What data does Tempo Fly handle?</h2>
+    <ul>
+      <li>
+        <strong>Audio from your active YouTube Music tab</strong> — captured
+        briefly (about 12 seconds) only when you click the
+        <em>Detect BPM &amp; key</em> button. The audio is analyzed entirely
+        inside your browser using the Web Audio API. It is never sent to a
+        server, written to disk, or shared with anyone.
+      </li>
+      <li>
+        <strong>The current track title and artist</strong> — read from the
+        YouTube Music page to label detection results. This stays in your
+        browser.
+      </li>
+      <li>
+        <strong>Your preferences</strong> — the tempo offset, pitch-preservation
+        toggle, effects volume, and the most recent detection result. Stored
+        with <code>chrome.storage.local</code> on your device.
+      </li>
+    </ul>
+
+    <h2>What Tempo Fly does <em>not</em> do</h2>
+    <ul>
+      <li>It does not contact any external server.</li>
+      <li>It does not include analytics, tracking, or advertising.</li>
+      <li>It does not access any site other than <code>music.youtube.com</code>.</li>
+      <li>It does not collect identifiers, account information, or browsing history.</li>
+      <li>It does not sell, share, or transmit user data to third parties.</li>
+    </ul>
+
+    <h2>Permissions, plainly</h2>
+    <ul>
+      <li><strong>tabCapture</strong> — capture audio from the YouTube Music tab during the on-demand BPM/key analysis. Released as soon as analysis completes.</li>
+      <li><strong>offscreen</strong> — run the audio analysis in an offscreen document, off the service worker thread.</li>
+      <li><strong>storage</strong> — remember your preferences and last detection result locally.</li>
+      <li><strong>activeTab</strong> — identify the YouTube Music tab to apply settings to.</li>
+      <li><strong>Host permission for <code>https://music.youtube.com/*</code></strong> — the extension only operates on YouTube Music.</li>
+    </ul>
+
+    <h2>Children's privacy</h2>
+    <p>Tempo Fly does not collect personal information from anyone, including children under 13.</p>
+
+    <h2>Changes to this policy</h2>
+    <p>If this policy changes, the updated date at the top of this page will reflect the change. The extension's privacy practices will not be quietly broadened.</p>
+
+    <h2>Contact</h2>
+    <p>
+      Questions or concerns? Email
+      <a href="mailto:REPLACE_WITH_YOUR_EMAIL">REPLACE_WITH_YOUR_EMAIL</a>.
+    </p>
+  </body>
+</html>
