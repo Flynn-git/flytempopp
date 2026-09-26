@@ -1,0 +1,294 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>YT Music Tempo</title>
+    <style>
+      :root {
+        color-scheme: dark light;
+        --bg: #0f172a;
+        --fg: #f1f5f9;
+        --muted: #94a3b8;
+        --accent: #3b82f6;
+        --accent-strong: #2563eb;
+        --border: #1e293b;
+        --panel: #1e293b;
+      }
+      body {
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        margin: 0;
+        padding: 14px 16px 16px;
+        width: 280px;
+      }
+      h1 {
+        font-size: 13px;
+        font-weight: 700;
+        margin: 0 0 10px;
+        letter-spacing: 0.04em;
+        color: var(--fg);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      h1 .mark {
+        color: var(--accent);
+        font-weight: 700;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 8px 0;
+      }
+      .rate {
+        font-variant-numeric: tabular-nums;
+        font-size: 22px;
+        font-weight: 600;
+      }
+      .rate-sub {
+        display: block;
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 2px;
+        font-variant-numeric: tabular-nums;
+      }
+      input[type="range"] {
+        width: 100%;
+        accent-color: var(--accent);
+      }
+      .presets {
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+      }
+      button {
+        background: #172033;
+        color: var(--fg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 5px 9px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: background 0.12s ease;
+      }
+      button:hover { background: #243049; }
+      button:disabled { opacity: 0.5; cursor: not-allowed; }
+      button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+      }
+      button.primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+      label.toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        margin-top: 12px;
+        cursor: pointer;
+      }
+      .status {
+        margin-top: 10px;
+        font-size: 11px;
+        color: var(--muted);
+        min-height: 14px;
+      }
+      .footer {
+        margin-top: 12px;
+        font-size: 11px;
+        color: var(--muted);
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .analysis {
+        margin-top: 14px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+      .analysis h2 {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        margin: 0 0 6px;
+        font-weight: 600;
+      }
+      .track {
+        font-size: 12px;
+        font-weight: 500;
+        margin-bottom: 6px;
+        line-height: 1.3;
+        word-break: break-word;
+      }
+      .track .artist { color: var(--muted); font-weight: 400; }
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px 10px;
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+      .stats .label { color: var(--muted); }
+      .stats .val { text-align: right; font-weight: 600; }
+      .stats .arrow { color: var(--muted); font-weight: 400; }
+      .stats .adjusted { color: var(--accent); }
+      .detect-row {
+        display: flex;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .detect-row button { flex: 1; }
+      .progress {
+        height: 3px;
+        background: #172033;
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: 8px;
+        display: none;
+      }
+      .progress.active { display: block; }
+      .progress > div {
+        height: 100%;
+        width: 0%;
+        background: var(--accent);
+        transition: width 0.2s linear;
+      }
+      .empty {
+        font-size: 11px;
+        color: var(--muted);
+        text-align: center;
+        padding: 4px 0 2px;
+      }
+
+      .effects {
+        margin-top: 14px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+      .effects h2 {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        margin: 0 0 8px;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .fx-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 6px;
+      }
+      .fx-grid button {
+        padding: 8px 4px;
+        font-size: 11px;
+        font-weight: 500;
+      }
+      .fx-grid button:active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+      }
+      .fx-volume {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 10px;
+        color: var(--muted);
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 400;
+      }
+      .fx-volume input {
+        width: 80px;
+        accent-color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <h1><span class="mark">▸▸</span> Tempo Fly</h1>
+
+    <div class="row">
+      <div>
+        <span class="rate" id="rateLabel">1.00×</span>
+        <span class="rate-sub" id="semiLabel">0 st · 0 oct</span>
+      </div>
+      <button id="resetBtn">Reset</button>
+    </div>
+
+    <input id="semitones" type="range" min="-24" max="12" step="1" value="0" />
+
+    <div class="presets">
+      <button data-semi="-12">−1 oct</button>
+      <button data-semi="-1">−1 st</button>
+      <button data-semi="0" class="primary">0</button>
+      <button data-semi="1">+1 st</button>
+      <button data-semi="12">+1 oct</button>
+    </div>
+
+    <label class="toggle">
+      <input id="preservePitch" type="checkbox" checked />
+      Preserve pitch (tempo only)
+    </label>
+
+    <div class="status" id="status"></div>
+
+    <div class="analysis">
+      <h2>Track analysis</h2>
+      <div class="track" id="trackInfo">
+        <span class="empty">No track detected yet.</span>
+      </div>
+
+      <div class="stats" id="stats" hidden>
+        <span class="label">BPM</span>
+        <span>
+          <span class="val" id="origBpm">—</span>
+          <span class="arrow">→</span>
+          <span class="val adjusted" id="adjBpm">—</span>
+        </span>
+        <span class="label">Key</span>
+        <span>
+          <span class="val" id="origKey">—</span>
+          <span class="arrow">→</span>
+          <span class="val adjusted" id="adjKey">—</span>
+        </span>
+      </div>
+
+      <div class="detect-row">
+        <button id="detectBtn">Detect BPM &amp; key (~12 s)</button>
+      </div>
+
+      <div class="progress" id="progress"><div></div></div>
+      <div class="status" id="detectStatus"></div>
+    </div>
+
+    <div class="effects">
+      <h2>
+        <span>Effects</span>
+        <label class="fx-volume">
+          vol
+          <input id="fxVolume" type="range" min="0" max="1" step="0.05" value="0.8" />
+        </label>
+      </h2>
+      <div class="fx-grid" id="fxGrid"></div>
+    </div>
+
+    <div class="footer">
+      <span>music.youtube.com</span>
+      <span id="actualRate"></span>
+    </div>
+
+    <script src="effects.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
