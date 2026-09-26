@@ -1,10 +1,10 @@
 # Tempo Fly — Chrome Web Store listing copy
 
-Paste-ready text for the developer console, rewritten after the first-submission rejection ("Red Potassium — Inaccurate Description / Irrelevant info").
+Paste-ready text for the developer console.
 
-**What went wrong last time:** the reviewer wrote "the screenshot media is not enough to understand the functionality." Nothing to fix in the code — the extension itself passed. The rejection is entirely about how the listing communicates what the extension does. Everything below is designed to make the mapping between screenshots ↔ description ↔ actual behaviour unmistakable.
+**v1.1 update — Audio FX + Support the artist.** This release changes code, so it needs a new zip: see `extension/README.md` for the manifest edit and version bump. Then update the description, single purpose, and screenshots below.
 
-**No code changes required.** You do not need to re-zip. Just update the listing metadata and screenshots in the dev console and resubmit.
+**Lesson from the first rejection** ("Red Potassium — Inaccurate Description / Irrelevant info"): the reviewer wrote "the screenshot media is not enough to understand the functionality." Keep the mapping between screenshots ↔ description ↔ actual behaviour unmistakable. Every new feature below has a matching screenshot.
 
 ---
 
@@ -18,9 +18,9 @@ Tempo Fly — Speed, Pitch, BPM & Key Tools for YouTube Music
 ## Short description (max 132 chars)
 
 ```
-Change the tempo and pitch of YouTube Music tracks in semitones. Detect BPM and key. Play sound effects over playback.
+Change YouTube Music tempo and pitch, detect BPM and key, add reverb, echo and filter FX, and buy tracks direct from the artist.
 ```
-(120 chars — direct, verbs-forward, one clause per feature)
+(128 chars — direct, verbs-forward, one clause per feature)
 
 ## Category
 
@@ -47,8 +47,19 @@ Open the popup while a track is playing on music.youtube.com. A slider — snapp
 2) Detect the BPM and musical key
 Click "Detect BPM & key" in the popup. Tempo Fly captures about 12 seconds of the current track's audio and analyses it locally in your browser using the Web Audio API. It then shows the original tempo in beats-per-minute and the estimated musical key (for example "F# min" or "C maj"). If you have already changed the tempo, it also shows the adjusted BPM and key that your current setting will produce.
 
-3) Play sound effects over the music
-Six built-in synthesized effects can be triggered on top of the music from a grid of buttons in the popup: Air horn, Siren, Vuvuzela, Bass boom, Riser, and DJ scratch. Each is generated on demand using the Web Audio API — no audio files are shipped. A volume slider in the panel header adjusts effect loudness independently of the music.
+3) Apply audio effects to the track
+The "Audio FX" panel processes the music itself, like the FX unit on a DJ mixer:
+- Filter: one knob. Turn it left for a low-pass sweep, right for a high-pass sweep, and centre for off.
+- Reverb: adds space, from a subtle room to a big wash.
+- Echo: automatically synced to half a beat when the BPM has been detected.
+- Flanger and Phaser: classic sweeping modulation effects.
+Each effect has an on/off button and an amount slider, and "All off" returns the track to its original sound. Processing happens live in your browser with the Web Audio API. Nothing is recorded, and no extra permission is needed.
+
+4) Play sound pads over the music
+Six built-in synthesized sounds can be triggered on top of the music from the "Sound pads" grid: Air horn, Siren, Vuvuzela, Bass boom, Riser, and DJ scratch. Each is generated on demand using the Web Audio API, so no audio files are shipped. A volume slider adjusts pad loudness independently of the music.
+
+5) Support the artist
+Under the track name, "Support the artist" links go to the artist's Bandcamp and to paid download stores (Bandcamp, Beatport, Juno, Qobuz) for the current track. The aim is to send listeners where their money reaches the artist, not to other free streaming services. The links only open when you click them.
 
 HOW TO USE IT
 
@@ -56,11 +67,13 @@ HOW TO USE IT
 - Click the Tempo Fly icon in the Chrome toolbar.
 - Drag the tempo slider or press a preset button to change tempo/pitch — playback updates instantly.
 - Click "Detect BPM & key" to see the current track's tempo and key. First use only, Chrome will ask permission for audio capture; grant it once and it stays granted.
-- Click any effect button to play a sound over the music. Adjust the "vol" slider in the effects panel to taste.
+- Toggle Reverb, Echo, Flanger or Phaser in the Audio FX panel, or sweep the Filter knob. The first time, if nothing happens, click once on the YouTube Music page and try again. Chrome needs a click on the page before it allows audio processing there.
+- Click any sound pad to play a sound over the music. Adjust the "vol" slider to taste.
+- Click an artist's Bandcamp button, or one of the store links, to buy the track direct.
 
 PRIVACY
 
-Tempo Fly runs entirely inside your browser. It makes no network requests. Audio captured during BPM/key detection is analysed locally in a Web Audio pipeline and immediately released — never uploaded, saved, or shared. No analytics, no tracking, no accounts, no third-party services. See the linked privacy policy for full details.
+Tempo Fly runs entirely inside your browser. It makes no network requests. Audio captured during BPM/key detection is analysed locally in a Web Audio pipeline and immediately released, never uploaded, saved, or shared. Audio effects are processed live and never recorded. "Support the artist" links are ordinary links: if you click one, that store receives the artist and title as a search query. No analytics, no tracking, no accounts, no third-party services. See the linked privacy policy for full details.
 
 PERMISSIONS
 
@@ -72,7 +85,7 @@ Requested only if you click "Detect BPM & key":
 - tabCapture: a single ~12-second audio sample of the current YouTube Music tab, for local BPM/key analysis. Released the moment analysis completes.
 - offscreen: hosts the analysis pipeline in an offscreen document, off the service worker thread.
 
-You can revoke the optional permissions at any time from Chrome's extension settings without uninstalling. Tempo, pitch, and effects will keep working; only detection will pause until you re-grant them.
+You can revoke the optional permissions at any time from Chrome's extension settings without uninstalling. Tempo, pitch, audio effects and sound pads will keep working; only detection will pause until you re-grant them.
 
 DISCLAIMER
 
@@ -86,7 +99,7 @@ Tempo Fly is an independent, third-party extension. It is not affiliated with, e
 Paste this in the "Single Purpose" field of the dev console. Ties every feature back to playback control — this heads off any reviewer question about whether the effects are unrelated.
 
 ```
-Tempo Fly's single purpose is to give the user local control over YouTube Music playback: adjusting tempo, adjusting pitch, showing the tempo and key of the current track, and layering short user-triggered sound effects over playback.
+Tempo Fly's single purpose is to give the user local control over YouTube Music playback: adjusting tempo and pitch, showing the tempo and key of the current track, applying audio effects to it, layering short user-triggered sounds over it, and linking to where the current track can be bought from the artist.
 ```
 
 ---
@@ -99,7 +112,7 @@ Paste one-by-one into the privacy practices form.
 
 - **`storage`** — "Stores user preferences (tempo offset in semitones, pitch-preservation toggle, effects volume) and the most recent local detection result. Uses chrome.storage.local — data stays on the user's device."
 
-- **Host permission `https://music.youtube.com/*`** — "Tempo Fly only operates on YouTube Music. The content script that applies tempo/pitch settings is restricted to this origin. This is also how the popup finds the active YouTube Music tab to message — no broader `tabs` or `activeTab` permission is needed."
+- **Host permission `https://music.youtube.com/*`** — "Tempo Fly only operates on YouTube Music. The content scripts that apply tempo/pitch settings and audio effects are restricted to this origin. This is also how the popup finds the active YouTube Music tab to message — no broader `tabs` or `activeTab` permission is needed."
 
 **Optional (requested only when the user clicks Detect BPM & key):**
 
@@ -111,9 +124,9 @@ Paste one-by-one into the privacy practices form.
 
 ## Screenshots — the part the reviewer flagged
 
-**Root cause of the previous rejection.** The reviewer could not tell from the screenshots what the extension actually does. Five screenshots, each showing the popup **on top of a real, playing YouTube Music tab**, each with a **clear text overlay** naming the feature demonstrated. That is what will pass.
+**Root cause of the previous rejection.** The reviewer could not tell from the screenshots what the extension actually does. Seven screenshots (five original + two for v1.1), each showing the popup **on top of a real, playing YouTube Music tab**, each with a **clear text overlay** naming the feature demonstrated. That is what will pass.
 
-Format: PNG, 1280×800 exactly. All five below.
+Format: PNG, 1280×800 exactly. All seven below.
 
 ### Screenshot 1 — Hero / overview
 
@@ -164,16 +177,16 @@ Detect the BPM and key of the current track — locally
 ~12 seconds of audio, analysed inside your browser. Nothing uploaded.
 ```
 
-### Screenshot 4 — Effects panel
+### Screenshot 4 — Sound pads panel
 
 **On screen:**
 - YT Music playing.
-- Popup scrolled/framed so the "Effects" panel is prominent, showing the 2×3 grid of six buttons (Air horn, Siren, Vuvuzela, Bass boom, Riser, Scratch).
+- Popup scrolled/framed so the "Sound pads" panel is prominent, showing the 2×3 grid of six buttons (Air horn, Siren, Vuvuzela, Bass boom, Riser, Scratch).
 - If possible, one button captured in its active/pressed state (blue background).
 
 **Text overlay:**
 ```
-Play sound effects over the music
+Play sound pads over the music
 ```
 **Sub-caption:**
 ```
@@ -197,6 +210,36 @@ Optional pitch transposition
 Keep pitch while changing tempo — or turn it off to shift the actual pitch too.
 ```
 
+### Screenshot 6 — Audio FX (v1.1)
+
+**On screen:**
+- YT Music playing.
+- Popup framed on the "Audio FX" panel with Reverb and Echo switched on (blue) and the Filter knob turned partly left.
+
+**Text overlay:**
+```
+Reverb, echo, filter, flanger & phaser — on the track itself
+```
+**Sub-caption:**
+```
+DJ-style FX processed live in your browser. Echo syncs to the detected BPM.
+```
+
+### Screenshot 7 — Support the artist (v1.1)
+
+**On screen:**
+- YT Music playing a track by an artist who sells on Bandcamp (an independent artist reads best).
+- Popup showing the Track analysis panel with the "Support the artist" Bandcamp button(s) and store links.
+
+**Text overlay:**
+```
+Love the track? Buy it direct from the artist
+```
+**Sub-caption:**
+```
+One click to the artist's Bandcamp, Beatport, Juno or Qobuz.
+```
+
 ---
 
 ## How to actually capture these on macOS
@@ -218,7 +261,7 @@ Keep pitch while changing tempo — or turn it off to shift the actual pitch too
    - **T** again for the sub-caption at 18–20pt
    - Arrow tool for annotations
 8. Verify the image is exactly 1280×800: Tools → Adjust Size. If it's not, crop to 1280×800 (the standard aspect ratio is the same; you can crop the outside padding).
-9. Save as PNG. Name them `01-overview.png` through `05-pitch.png`.
+9. Save as PNG. Name them `01-overview.png` through `07-support.png`.
 
 **Tips that meaningfully increase pass rate:**
 - Text overlays must be large enough to read at thumbnail size in the store listing. If you can't read them at 25% zoom in Preview, they're too small.
@@ -243,14 +286,15 @@ You can build this in any tool. Figma, Canva, Preview shape tools, or Keynote al
 
 ## Resubmission checklist
 
+- [ ] Build the v1.1 zip (see `extension/README.md`) and upload it under Package
 - [ ] Update the store listing name to the new title above
 - [ ] Update the short description
 - [ ] Replace the long description with the new feature-by-feature version
 - [ ] Update the single purpose statement
 - [ ] Update permission justifications
-- [ ] Capture and upload the five new screenshots per the brief above
+- [ ] Capture and upload the screenshots per the brief above (at least the two new v1.1 ones)
 - [ ] (Optional) Upload a promo tile
-- [ ] Verify your privacy policy URL loads with real contact info (already updated in `privacy.html`)
+- [ ] Publish the updated `privacy.html` (now covers audio effects and support links) and verify the URL loads
 - [ ] Click **Submit for review**
 
-No new zip upload is needed unless you also want to bump the version. If you do zip a new package (e.g., because you tweaked anything), bump `manifest.json` version to `1.0.1` first.
+v1.1 needs a new zip. Bump `manifest.json` version first (to `1.1.0`, or at least above the version currently live).

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>YT Music Tempo</title>
+    <title>Tempo Fly</title>
     <style>
       :root {
         color-scheme: dark light;
@@ -213,6 +213,76 @@
         width: 80px;
         accent-color: var(--accent);
       }
+
+      .support {
+        margin: 8px 0 4px;
+        font-size: 11px;
+      }
+      .support[hidden] { display: none; }
+      .support .label {
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+      .support a {
+        color: var(--fg);
+        text-decoration: none;
+      }
+      .support .artists {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+      .support .artists a {
+        background: #1da0c3;
+        color: white;
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-weight: 600;
+      }
+      .support .artists a:hover { background: #178aa8; }
+      .support .stores {
+        margin-top: 6px;
+        color: var(--muted);
+      }
+      .support .stores a {
+        color: var(--accent);
+        margin-right: 8px;
+      }
+      .support .stores a:hover { text-decoration: underline; }
+
+      .audiofx .fx-row {
+        display: grid;
+        grid-template-columns: 72px 1fr;
+        align-items: center;
+        gap: 8px;
+        margin: 6px 0;
+      }
+      .audiofx .fx-row button {
+        padding: 5px 4px;
+        font-size: 11px;
+      }
+      .audiofx .fx-row button.on {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+      }
+      .audiofx .fx-row .fx-name {
+        font-size: 11px;
+        text-align: center;
+      }
+      .audiofx .filter-scale {
+        display: flex;
+        justify-content: space-between;
+        font-size: 9px;
+        color: var(--muted);
+        margin: -4px 0 0 80px;
+      }
+      .audiofx h2 button {
+        padding: 2px 6px;
+        font-size: 10px;
+        text-transform: none;
+        letter-spacing: 0;
+      }
     </style>
   </head>
   <body>
@@ -249,6 +319,12 @@
         <span class="empty">No track detected yet.</span>
       </div>
 
+      <div class="support" id="support" hidden>
+        <div class="label">Support the artist — buy direct:</div>
+        <div class="artists" id="supportArtists"></div>
+        <div class="stores" id="supportStores"></div>
+      </div>
+
       <div class="stats" id="stats" hidden>
         <span class="label">BPM</span>
         <span>
@@ -272,9 +348,39 @@
       <div class="status" id="detectStatus"></div>
     </div>
 
+    <div class="effects audiofx">
+      <h2>
+        <span>Audio FX</span>
+        <button id="fxResetBtn" title="Turn all audio effects off">All off</button>
+      </h2>
+      <div class="fx-row">
+        <span class="fx-name">Filter</span>
+        <input id="fx-filter" type="range" min="-1" max="1" step="0.01" value="0"
+               title="Left: low-pass · Right: high-pass · Double-click to reset" />
+      </div>
+      <div class="filter-scale"><span>low-pass</span><span>off</span><span>high-pass</span></div>
+      <div class="fx-row" data-fx="reverb">
+        <button>Reverb</button>
+        <input type="range" min="0" max="1" step="0.01" value="0.35" />
+      </div>
+      <div class="fx-row" data-fx="echo">
+        <button>Echo</button>
+        <input type="range" min="0" max="1" step="0.01" value="0.4" />
+      </div>
+      <div class="fx-row" data-fx="flanger">
+        <button>Flanger</button>
+        <input type="range" min="0" max="1" step="0.01" value="0.5" />
+      </div>
+      <div class="fx-row" data-fx="phaser">
+        <button>Phaser</button>
+        <input type="range" min="0" max="1" step="0.01" value="0.5" />
+      </div>
+      <div class="status" id="fxStatus"></div>
+    </div>
+
     <div class="effects">
       <h2>
-        <span>Effects</span>
+        <span>Sound pads</span>
         <label class="fx-volume">
           vol
           <input id="fxVolume" type="range" min="0" max="1" step="0.05" value="0.8" />
@@ -289,6 +395,7 @@
     </div>
 
     <script src="effects.js"></script>
+    <script src="support.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

@@ -24,6 +24,15 @@ const detectStatusEl = document.getElementById("detectStatus");
 const progressEl = document.getElementById("progress");
 const progressBar = progressEl.querySelector("div");
 
+const supportEl = document.getElementById("support");
+const supportArtistsEl = document.getElementById("supportArtists");
+const supportStoresEl = document.getElementById("supportStores");
+
+const fxFilterInput = document.getElementById("fx-filter");
+const fxRows = document.querySelectorAll(".audiofx .fx-row[data-fx]");
+const fxResetBtn = document.getElementById("fxResetBtn");
+const fxStatusEl = document.getElementById("fxStatus");
+
 const fxGridEl = document.getElementById("fxGrid");
 const fxVolumeInput = document.getElementById("fxVolume");
 
@@ -70,6 +79,7 @@ function save() {
     [STORAGE_KEYS.rate]: currentRate(),
     [STORAGE_KEYS.preservePitch]: preserveInput.checked,
   });
+  syncFxBpm();
 }
 
 // ---- Popup helpers ----
@@ -98,6 +108,28 @@ function renderTrack() {
     trackInfoEl.innerHTML =
       `<span class="empty">Couldn't read track name (detection still works).</span>`;
   }
+  renderSupport();
+}
+
+function renderSupport() {
+  const { artists, track } = Support.links(currentTrack);
+  supportEl.hidden = artists.length === 0 && track.length === 0;
+  supportArtistsEl.replaceChildren(
+    ...artists.map((a) => supportLink(a.url, `${a.name} on Bandcamp`))
+  );
+  supportStoresEl.replaceChildren(
+    ...(track.length ? [document.createTextNode("This track: ")] : []),
+    ...track.map((t) => supportLink(t.url, t.store))
+  );
+}
+
+function supportLink(url, text) {
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  a.textContent = text;
+  return a;
 }
 
 function renderAdjusted() {
@@ -263,6 +295,7 @@ chrome.runtime.onMessage.addListener((msg) => {
       ? `Detected · confidence ${msg.key?.confidence ?? "—"}`
       : "Couldn't lock onto a beat — try again on a more rhythmic section.";
     renderAdjusted();
+    syncFxBpm();
     return;
   }
   if (msg.type === "ytm-analyze-error") {
@@ -272,7 +305,82 @@ chrome.runtime.onMessage.addListener((msg) => {
   }
 });
 
-// ---- Effects ----
+// ---- Audio FX (filter, reverb, echo, flanger, phaser) ----
+
+// The effects run in the YouTube Music tab (audiofx.js), which owns the state;
+// the popup just mirrors it.
+
+function renderFx(state) {
+  if (!state) return;
+  fxFilterInput.value = String(state.filter.on ? state.filter.amount : 0);
+  fxRows.forEach((row) => {
+    const fx = state[row.dataset.fx];
+    row.querySelector("button").classList.toggle("on", fx.on);
+    row.querySelector("input").value = String(fx.amount);
+  });
+}
+
+// Tempo-adjusted BPM, so the echo stays in time with the track.
+function adjustedBpm() {
+  return lastDetection?.bpm ? lastDetection.bpm * currentRate() : null;
+}
+
+async function sendFx(msg) {
+  const tab = await getActiveYTMusicTab();
+  if (!tab) {
+    fxStatusEl.textContent = "Open music.youtube.com to use audio effects.";
+    return null;
+  }
+  try {
+    const resp = await chrome.tabs.sendMessage(tab.id, { bpm: adjustedBpm(), ...msg });
+    if (resp) {
+      renderFx(resp.state);
+      fxStatusEl.textContent = resp.ok ? "" : resp.error;
+    }
+    return resp;
+  } catch {
+    fxStatusEl.textContent = "Reload the YouTube Music tab to enable audio effects.";
+    return null;
+  }
+}
+
+function syncFxBpm() {
+  sendFx({ type: "ytm-fx-set" });
+}
+
+async function loadFx() {
+  const tab = await getActiveYTMusicTab();
+  if (!tab) return;
+  try {
+    const resp = await chrome.tabs.sendMessage(tab.id, { type: "ytm-fx-get" });
+    if (resp?.ok) renderFx(resp.state);
+  } catch {}
+}
+
+fxFilterInput.addEventListener("input", () => {
+  const amount = Number(fxFilterInput.value);
+  sendFx({ type: "ytm-fx-set", name: "filter", on: amount !== 0, amount });
+});
+fxFilterInput.addEventListener("dblclick", () => {
+  fxFilterInput.value = "0";
+  sendFx({ type: "ytm-fx-set", name: "filter", on: false, amount: 0 });
+});
+
+fxRows.forEach((row) => {
+  const name = row.dataset.fx;
+  const btn = row.querySelector("button");
+  const slider = row.querySelector("input");
+  btn.addEventListener("click", () => {
+    sendFx({ type: "ytm-fx-set", name, on: !btn.classList.contains("on"), amount: Number(slider.value) });
+  });
+  slider.addEventListener("input", () => {
+    sendFx({ type: "ytm-fx-set", name, amount: Number(slider.value) });
+  });
+});
+
+fxResetBtn.addEventListener("click", () => sendFx({ type: "ytm-fx-reset" }));
+
+// ---- Sound pads ----
 
 function buildFxGrid() {
   fxGridEl.innerHTML = "";
@@ -353,4 +461,5 @@ fxVolumeInput.addEventListener("input", () => {
 detectBtn.addEventListener("click", startDetection);
 
 buildFxGrid();
+loadFx();
 setInterval(refreshLiveState, 1500);
