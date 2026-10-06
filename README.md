@@ -13,6 +13,7 @@ hovering.today. It's left where it is so any existing link to it keeps working.
 | `apps/connector` | The companion Chrome extension. Reads a platform library using the user's own signed-in session and hands it to the site. |
 | `packages/core` | Shared code: data model, site↔extension message protocol, title/artist normalization, cross-platform matcher. |
 | `docs/ARCHITECTURE.md` | Why it's built this way, and what's next. |
+| `docs/DEPLOY.md` | Cloudflare deploy: what runs when, and the one-time setup. |
 
 ## Develop
 
@@ -31,9 +32,14 @@ cp apps/web/.env.example apps/web/.env.local   # paste the ID into VITE_CONNECTO
 npm run dev                                    # http://localhost:5173
 ```
 
-Production builds: `npm run build` writes `apps/web/dist` (static files to host at hovering.today) and
-`apps/connector/dist` (zip it for the Chrome Web Store). The production connector only accepts messages
+Production builds: `npm run build` writes `apps/web/dist` (the site) and `apps/connector/dist` (zip it
+for the Chrome Web Store). The production connector only accepts messages
 from `https://hovering.today` and `https://www.hovering.today` (`apps/connector/origins.json`).
+
+## Deploy
+
+Pushes to `main` deploy to https://hovering.today on Cloudflare; PRs get a preview URL. One-time setup
+(domain, API token, GitHub secrets) is in [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ## Platform status
 

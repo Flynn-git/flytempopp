@@ -60,12 +60,12 @@ must agree, so a remix never merges with the original. A group never holds two t
 
 ## Next steps
 
-1. **Deploy the site.** Any static host works (Cloudflare Pages, Netlify, GitHub Pages); point
-   hovering.today at it.
-2. **Publish the connector** to the Chrome Web Store (unlisted is fine to start). Put its ID in
-   `apps/web/.env.production` so the site can find it.
-3. **SoundCloud.** Register an app, then add OAuth 2.1 + PKCE on the site (it needs a small token-exchange
-   endpoint, since SoundCloud's token call needs the client secret).
+1. **Deploy the site.** Cloudflare Workers + static assets, via GitHub Actions; see `DEPLOY.md`.
+2. **Publish the connector** to the Chrome Web Store (unlisted is fine to start). Set its ID as the
+   `CONNECTOR_ID` repo variable so production builds can find it.
+3. **SoundCloud.** Register an app, then add OAuth 2.1 + PKCE on the site. The token exchange needs the
+   client secret, so add it as a small route on the same Cloudflare Worker (`main` in `wrangler.jsonc`,
+   secret via `wrangler secret put`).
 4. **Spotify live sync.** Either a session adapter in the connector (like YTM), or "bring your own client
    ID" for power users. The export import works for everyone meanwhile.
 5. **Writes.** "Copy this playlist to platform X": search on the target platform + the matcher + an
