@@ -9,7 +9,7 @@ SoundCloud sign-in needs a token-exchange endpoint, it can be added to this same
 | Event | Result |
 |---|---|
 | Push to `main` | Tests, typecheck, build, then **production** deploy to https://hovering.today |
-| Pull request | Same checks, then a **preview** at `https://pr-<n>-hovering-today.<your-subdomain>.workers.dev`. Production is untouched. |
+| Pull request | Same checks, then a **preview** at `https://pr-<n>-hovering-today.<your-subdomain>.workers.dev`. Production is untouched. Previews start working after the first production deploy, since they're versions of the existing site. |
 | Secrets not set yet, or a PR from a fork | Checks run; deploy is skipped with a notice (no red CI) |
 
 Each run also uploads the built connector extension as a `connector` artifact.
@@ -41,7 +41,7 @@ Repo → **Settings → Secrets and variables → Actions**:
 | Variable | `CONNECTOR_ID` | the connector's Chrome Web Store ID, once published (optional until then) |
 
 ### 4. Deploy
-Merge to `main` (or re-run the workflow on `main`). The first deploy creates the `hovering-today` Worker
+Merge to `main`. PR previews only start working after this first production deploy. The first deploy creates the `hovering-today` Worker
 and attaches hovering.today; the certificate can take a few minutes.
 
 ### Optional: www

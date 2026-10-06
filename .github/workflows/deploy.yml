@@ -43,6 +43,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
+          set -o pipefail
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
             echo "::notice::Cloudflare secrets not set (or not available to this PR); skipping deploy. See docs/DEPLOY.md."
             exit 0
@@ -50,6 +51,11 @@ jobs:
           if [ "$GITHUB_EVENT_NAME" = "push" ]; then
             npx wrangler deploy | tee deploy.log
           else
+            # Previews are versions of an existing Worker; the first push to main creates it.
+            if ! npx wrangler deployments list > /dev/null 2>&1; then
+              echo "::notice::No production deploy yet, so there is nothing to preview against. Merge to main to create hovering.today; PR previews work after that."
+              exit 0
+            fi
             npx wrangler versions upload --preview-alias "pr-$PR_NUMBER" --message "PR #$PR_NUMBER" | tee deploy.log
           fi
           {
