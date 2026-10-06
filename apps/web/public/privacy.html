@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy · hovering.today</title>
+    <style>
+      :root { color-scheme: light dark; --fg: #181e2a; --muted: #585e6d; --bg: #fafafa; --accent: #1d48e6; }
+      @media (prefers-color-scheme: dark) { :root { --fg: #eceef3; --muted: #9aa0ad; --bg: #12151c; --accent: #7b9bff; } }
+      body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.6 system-ui, sans-serif; }
+      main { max-width: 42rem; margin: 0 auto; padding: 32px 16px 64px; }
+      h1 { margin-bottom: 0; } .date { color: var(--muted); margin-top: 4px; }
+      a { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Privacy</h1>
+      <p class="date">hovering.today and the hovering.today connector · draft, last updated 2026-10-06</p>
+
+      <h2>What we handle</h2>
+      <ul>
+        <li><strong>Your music library</strong> — the titles, artists, albums, durations and links of songs in your likes and playlists on the platforms you connect.</li>
+        <li><strong>Files you import</strong> — for Spotify, the “Account data” export you choose to upload. Only <code>YourLibrary.json</code> and <code>Playlist*.json</code> are read; everything else in the zip is ignored.</li>
+      </ul>
+
+      <h2>Where it goes</h2>
+      <p>
+        Nowhere. Your library is stored in your browser (IndexedDB on hovering.today) and matched there.
+        hovering.today has no accounts and no server-side storage, and sends no analytics.
+      </p>
+
+      <h2>The connector extension</h2>
+      <ul>
+        <li>Only hovering.today can talk to it.</li>
+        <li>It asks for access to a platform (for example <code>music.youtube.com</code>) only when you click Connect, and only that platform.</li>
+        <li>It reads your library using the session you are already signed in with, by making requests from a tab on that platform’s own site. It never sees or stores your password, and it never sends your session anywhere else.</li>
+        <li>You can remove its access at any time in Chrome’s extension settings.</li>
+      </ul>
+
+      <h2>Removing your data</h2>
+      <p>Use “Remove” next to a platform, or clear site data for hovering.today in your browser.</p>
+
+      <h2>Contact</h2>
+      <p>Questions? Email <a href="mailto:flynn.noe@gmail.com">flynn.noe@gmail.com</a>.</p>
+    </main>
+  </body>
+</html>
