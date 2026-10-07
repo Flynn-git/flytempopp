@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupTracks, matchTracks, normalizeArtist, normalizeTitle, parseBridgeRequest, type SourceTrack } from '../src';
+import { cleanTitle, groupTracks, matchTracks, normalizeArtist, normalizeTitle, type SourceTrack } from '../src';
 
 const spotify = (id: string, title: string, artists: string[], durationMs?: number, isrc?: string): SourceTrack => ({
   platform: 'spotify', id, title, artists, durationMs, isrc,
@@ -17,6 +17,12 @@ describe('normalize', () => {
     expect(normalizeTitle('Midnight City [Free DL]', ['m83'])).toBe('midnight city');
     expect(normalizeTitle('Heroes - 2017 Remaster', ['David Bowie'])).toBe('heroes');
     expect(normalizeTitle('Get Lucky (feat. Pharrell Williams)', ['Daft Punk'])).toBe('get lucky');
+  });
+
+  it('cleans display titles without changing case', () => {
+    expect(cleanTitle('Get Lucky (Official Audio)')).toBe('Get Lucky');
+    expect(cleanTitle('Midnight City [Free DL]')).toBe('Midnight City');
+    expect(cleanTitle('Song (Remix)')).toBe('Song (Remix)');
   });
 
   it('keeps a dash that is part of the title', () => {
@@ -81,16 +87,5 @@ describe('groupTracks', () => {
     for (const g of groups) {
       expect(new Set(g.members.map((t) => t.platform)).size).toBe(g.members.length);
     }
-  });
-});
-
-describe('parseBridgeRequest', () => {
-  it('accepts valid requests and rejects junk', () => {
-    expect(parseBridgeRequest({ type: 'listTracks', platform: 'ytm', collectionId: 'LM' })).toEqual({
-      type: 'listTracks', platform: 'ytm', collectionId: 'LM',
-    });
-    expect(() => parseBridgeRequest({ type: 'listTracks', platform: 'napster', collectionId: 'x' })).toThrow();
-    expect(() => parseBridgeRequest({ type: 'rm -rf' })).toThrow();
-    expect(() => parseBridgeRequest(null)).toThrow();
   });
 });

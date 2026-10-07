@@ -16,8 +16,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      # Chrome Web Store ID of the connector (repo Settings → Variables). Empty until it's published.
-      VITE_CONNECTOR_ID: ${{ vars.CONNECTOR_ID }}
+      # Google OAuth client ID for YouTube Music sign-in (repo Settings → Variables). Public by design.
+      VITE_GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -28,12 +28,6 @@ jobs:
       - run: npm test
       - run: npm run typecheck
       - run: npm run build
-
-      - name: Upload connector build
-        uses: actions/upload-artifact@v4
-        with:
-          name: connector
-          path: apps/connector/dist
 
       # Production: pushes to main go live at https://hovering.today.
       # PRs: a preview version at https://pr-<n>-hovering-today.<subdomain>.workers.dev (production untouched).

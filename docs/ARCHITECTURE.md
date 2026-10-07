@@ -2,42 +2,41 @@
 
 ## The constraint that shapes everything
 
-Platform developer APIs don't scale to "anyone can use this":
+Platform APIs limit how many people one app can serve:
 
-- **Spotify** — apps in development mode need the owner to have Premium and are capped at **5 users**.
+- **Spotify**: apps in development mode need the owner to have Premium and are capped at **5 users**.
   Lifting the cap ("extended quota") is only open to registered businesses with **≥250k monthly active users**.
-- **YouTube Music** — no library API. The YouTube Data API's default quota is 10,000 units/day **per project,
-  shared by every user**; adding a playlist item costs 50, so ~200 additions a day for the whole service.
-- **SoundCloud** — usable official API (OAuth 2.1 + PKCE), but registering an app needs an Artist Pro subscription.
-
-So hovering.today doesn't route everyone through one developer app. Each user's library is read
-**from their own browser, with their own session**, and nothing about it touches a shared quota.
+  So hovering.today imports Spotify's own data export instead.
+- **YouTube**: the official YouTube Data API v3 reads a signed-in user's likes and playlists. Reads are cheap
+  (1 quota unit per 50 items; a 5,000-song library is ~100 of the default 10,000 units/day per project), and
+  quota increases are free to request. Writes (adding to a playlist) cost 50 units each, so copying playlists
+  into YouTube will need a quota increase.
+- **SoundCloud**: usable official API (OAuth 2.1 + PKCE), but registering an app needs an Artist Pro subscription.
 
 ## Pieces
 
 ```
-hovering.today (apps/web)                       connector extension (apps/connector)
-├─ UI, library view, filters                    ├─ ytm adapter → music.youtube.com tab
-├─ matcher (packages/core)                      └─ (spotify session adapter: later)
-├─ IndexedDB storage
-├─ Spotify export import
-├─ SoundCloud OAuth (next)
-└─ chrome.runtime.sendMessage(CONNECTOR_ID, …) ──► onMessageExternal
-                    ◄──────────── BridgeResponse ──┘
+hovering.today (apps/web, static on Cloudflare)
+├─ UI: platform cards, unified library, "not on X" filter
+├─ importers/youtube.ts ── Google Identity Services token (read-only, in memory)
+│                         └─► googleapis.com/youtube/v3  (videos?myRating=like, playlists, playlistItems)
+├─ importers/spotify-export.ts ── user-uploaded zip, parsed in the browser
+├─ matcher (packages/core)
+└─ IndexedDB storage
 ```
 
-- **The site is the product.** All UI, storage and matching live there, so most changes ship by deploying
-  the site, without a Web Store review.
-- **The extension is a thin fetcher.** It answers five messages (`hello`, `status`, `connect`,
-  `listCollections`, `listTracks`, see `packages/core/src/protocol.ts`), validates every payload, and only
-  accepts messages from hovering.today origins (`externally_connectable` + an origin check).
-- **Permissions are per platform and optional.** Host access to e.g. `music.youtube.com` is requested
-  from the extension's own `connect.html` page when the user clicks Connect on the site (Chrome only
-  shows permission prompts from extension pages).
-- **The YouTube Music adapter** runs `youtubei/v1/browse` inside a music.youtube.com tab (reusing an open one,
-  or opening a background tab it closes when idle), signed the same way the site signs its own requests.
-  Response parsing (`ytm-parse.ts`) walks the JSON for known renderer objects, not fixed paths, so small
-  layout changes don't break it. When YouTube Music changes, that file is where to fix it.
+Everything runs in the visitor's browser. There's no backend and no stored credentials: the Google access token
+lives in memory for one sync and expires within the hour.
+
+**YouTube Music specifics.** YouTube Music likes and playlists are ordinary YouTube likes and playlists.
+`videos.list?myRating=like` returns liked videos; only YouTube category 10 (Music) is kept, so non-music likes
+are skipped. Playlists with no music in them are skipped too. Songs from YouTube Music's catalogue come from
+"Artist - Topic" channels with clean titles; other uploads are usually "Artist - Song (Official Video)" and get
+split and cleaned.
+
+An earlier version used a Chrome extension that read music.youtube.com's internal API with the user's session.
+It was dropped because it needed an install, didn't work on phones, and relied on unofficial endpoints. It's in
+git history if it's ever needed (e.g. for Spotify live sync).
 
 ## Matching (`packages/core/src/match.ts`)
 
@@ -49,27 +48,19 @@ Normalization strips upload decoration (`(Official Video)`, `[Free DL]`, `- 2011
 `Artist - ` prefixes, `VEVO`/`- Topic` channel names). Version words (remix, live, edit, acoustic, …)
 must agree, so a remix never merges with the original. A group never holds two tracks from the same platform.
 
-## Risks
+## Google verification
 
-- **Internal endpoints change without notice.** Keep adapters thin and parsing in one place per platform.
-- **Terms of service.** Reading your own library via your own session is a grey area under platform terms.
-  Keep it user-initiated, sequential and rate-limited (the YTM adapter waits between pages). Be more
-  conservative with writes (copying playlists) than with reads.
-- **Chrome Web Store review.** Reviewers look closely at host permissions; the narrow, optional,
-  per-platform requests and the privacy page (`apps/web/public/privacy.html`) are there for that.
+`youtube.readonly` is a *sensitive* scope. Until the OAuth app is verified, sign-in shows an "unverified app"
+warning and is limited to test users (100 accounts in total). Verification is free: it needs the homepage,
+privacy policy (`apps/web/public/privacy.html`, which includes the Limited Use statement), domain ownership in
+Google Search Console, and a short video of the sign-in flow.
 
 ## Next steps
 
-1. **Deploy the site.** Cloudflare Workers + static assets, via GitHub Actions; see `DEPLOY.md`.
-2. **Publish the connector** to the Chrome Web Store (unlisted is fine to start). Set its ID as the
-   `CONNECTOR_ID` repo variable so production builds can find it.
-3. **SoundCloud.** Register an app, then add OAuth 2.1 + PKCE on the site. The token exchange needs the
-   client secret, so add it as a small route on the same Cloudflare Worker (`main` in `wrangler.jsonc`,
-   secret via `wrangler secret put`).
-4. **Spotify live sync.** Either a session adapter in the connector (like YTM), or "bring your own client
-   ID" for power users. The export import works for everyone meanwhile.
-5. **Writes.** "Copy this playlist to platform X": search on the target platform + the matcher + an
-   add-to-playlist call, with a review step before anything is written.
-6. **Accounts and sync** (optional). Only then does hovering.today need a backend. Keep platform sessions
-   in the browser, and consider a shared, anonymous match cache (platform track ID → canonical track) so
-   every confirmed match helps everyone.
+1. **Google verification**, to open YouTube Music sign-in to everyone.
+2. **SoundCloud.** Register an app, then OAuth 2.1 + PKCE. The token exchange needs the client secret, so add
+   it as a small route on the same Cloudflare Worker (`main` in `wrangler.jsonc`, secret via `wrangler secret put`).
+3. **Copy playlists between platforms**: search on the target platform + the matcher + an add-to-playlist call,
+   with a review step before anything is written.
+4. **Accounts and sync** (optional). Only then does hovering.today need a backend. Consider a shared, anonymous
+   match cache (platform track ID → canonical track) so every confirmed match helps everyone.

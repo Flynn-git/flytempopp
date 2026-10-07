@@ -20,6 +20,11 @@ const REMASTER = /\s*(?:-\s*|[([])\s*(?:\d{4}\s+)?remaster(?:ed)?(?:\s+\d{4})?(?
 
 const VERSION_WORDS = ['remix', 'mix', 'edit', 'live', 'acoustic', 'instrumental', 'cover', 'bootleg', 'flip', 'vip', 'rework', 'sped up', 'slowed'];
 
+/** Removes upload decoration ("(Official Video)", "[Free DL]") for display, keeping case. */
+export function cleanTitle(title: string): string {
+  return title.replace(NOISE_TAGS, '').trim() || title;
+}
+
 /** Lowercase, strip accents and punctuation, collapse whitespace. */
 export function fold(s: string): string {
   return s
