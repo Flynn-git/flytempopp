@@ -1,0 +1,66 @@
+name: Test & deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # Chrome Web Store ID of the connector (repo Settings → Variables). Empty until it's published.
+      VITE_CONNECTOR_ID: ${{ vars.CONNECTOR_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+
+      - name: Upload connector build
+        uses: actions/upload-artifact@v4
+        with:
+          name: connector
+          path: apps/connector/dist
+
+      # Production: pushes to main go live at https://hovering.today.
+      # PRs: a preview version at https://pr-<n>-hovering-today.<subdomain>.workers.dev (production untouched).
+      - name: Deploy to Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -o pipefail
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::notice::Cloudflare secrets not set (or not available to this PR); skipping deploy. See docs/DEPLOY.md."
+            exit 0
+          fi
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            npx wrangler deploy | tee deploy.log
+          else
+            # Previews are versions of an existing Worker; the first push to main creates it.
+            if ! npx wrangler deployments list > /dev/null 2>&1; then
+              echo "::notice::No production deploy yet, so there is nothing to preview against. Merge to main to create hovering.today; PR previews work after that."
+              exit 0
+            fi
+            npx wrangler versions upload --preview-alias "pr-$PR_NUMBER" --message "PR #$PR_NUMBER" | tee deploy.log
+          fi
+          {
+            echo "### Cloudflare deploy"
+            echo '```'
+            grep -Eo 'https://[^ ]+' deploy.log | sort -u
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,23 @@
+{
+  "name": "hovering-today",
+  "private": true,
+  "description": "Connect your music libraries across YouTube Music, Spotify and SoundCloud.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @hovering/web",
+    "build": "npm run build -w @hovering/web && npm run build -w @hovering/connector",
+    "test": "vitest run",
+    "typecheck": "tsc -p packages/core && tsc -p apps/web && tsc -p apps/connector"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.3.4",
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.3",
+    "vitest": "^5.0.3",
+    "wrangler": "^4.148.0"
+  }
+}

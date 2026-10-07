@@ -1,0 +1,17 @@
+// Cloudflare Workers (static assets) deployment for hovering.today.
+// Deployed by .github/workflows/deploy.yml; see docs/DEPLOY.md for one-time setup.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hovering-today",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./apps/web/dist",
+    "not_found_handling": "404-page"
+  },
+  // Requires hovering.today to be a zone on the same Cloudflare account.
+  // Wrangler creates the DNS record and certificate on first deploy.
+  "routes": [{ "pattern": "hovering.today", "custom_domain": true }],
+  // Keep *.workers.dev on: per-PR preview URLs live there.
+  "workers_dev": true,
+  "preview_urls": true
+}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Connect · hovering.today</title>
+    <style>
+      :root { color-scheme: light dark; --fg: #181e2a; --muted: #585e6d; --bg: #fafafa; --accent: #1d48e6; }
+      @media (prefers-color-scheme: dark) { :root { --fg: #eceef3; --muted: #9aa0ad; --bg: #12151c; --accent: #7b9bff; } }
+      body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; }
+      main { max-width: 32rem; margin: 12vh auto; padding: 0 16px; }
+      h1 { font-size: 1.4rem; margin: 0 0 .5rem; }
+      p { color: var(--muted); }
+      button { font: inherit; padding: .6rem 1.1rem; border-radius: 8px; border: 0; background: var(--accent); color: #fff; cursor: pointer; }
+      #done { display: none; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1 id="title">Connect</h1>
+      <p id="why"></p>
+      <button id="grant">Allow access</button>
+      <p id="done">Connected. You can close this tab and go back to hovering.today.</p>
+    </main>
+    <script src="connect.js" type="module"></script>
+  </body>
+</html>

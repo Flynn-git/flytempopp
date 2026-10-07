@@ -1,0 +1,4 @@
+{
+  "site": ["https://hovering.today", "https://www.hovering.today"],
+  "dev": ["http://localhost:5173"]
+}
