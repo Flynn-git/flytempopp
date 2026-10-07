@@ -1,6 +1,5 @@
 /**
- * Canonical data model shared by the hovering.today web app and the
- * companion connector extension.
+ * Canonical data model for hovering.today.
  *
  * Platforms hand us `SourceTrack`s (their view of a song). The matcher links
  * the ones that are the same recording to a single canonical `Track`, so a

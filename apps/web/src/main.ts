@@ -3,23 +3,21 @@ import {
   PLATFORM_LABELS,
   groupTracks,
   type CollectionSnapshot,
-  type HelloResult,
   type Platform,
-  type PlatformStatus,
   type SourceTrack,
   type TrackGroup,
 } from '@hovering/core';
-import { ConnectorError, hello, send } from './bridge';
 import { deletePlatform, loadSnapshots, saveSnapshots } from './db';
 import { importSpotifyExport } from './importers/spotify-export';
+import { GOOGLE_CLIENT_ID, YouTubeError, loadGoogle, requestToken, syncYouTube } from './importers/youtube';
 
 // ---------- state ----------
 
 interface State {
   snapshots: CollectionSnapshot[];
   groups: TrackGroup[];
-  connector: HelloResult | null;
-  ytm: PlatformStatus | null;
+  /** Google Identity Services, once loaded; needed synchronously in the sign-in click. */
+  google: Awaited<ReturnType<typeof loadGoogle>> | null;
   busy: Partial<Record<Platform, string>>;
   errors: Partial<Record<Platform, string>>;
   filter: 'all' | `missing:${Platform}`;
@@ -29,8 +27,7 @@ interface State {
 const state: State = {
   snapshots: [],
   groups: [],
-  connector: null,
-  ytm: null,
+  google: null,
   busy: {},
   errors: {},
   filter: 'all',
@@ -74,34 +71,27 @@ async function reload() {
   render();
 }
 
-async function refreshConnector() {
-  state.connector = await hello();
-  state.ytm = state.connector ? await send({ type: 'status', platform: 'ytm' }).catch(() => null) : null;
-  render();
-}
-
 function describeError(e: unknown): string {
-  if (e instanceof ConnectorError) {
-    if (e.code === 'not_signed_in') return 'Sign in at music.youtube.com in this browser, then try again.';
-    if (e.code === 'permission_required') return 'Connect YouTube Music first.';
-    if (e.code === 'upstream_changed') return 'YouTube Music changed something on their side. The connector needs an update.';
-  }
+  if (e instanceof YouTubeError && e.code === 'cancelled') return 'Sign-in was cancelled.';
   return e instanceof Error ? e.message : String(e);
 }
 
 async function syncYtm() {
   state.errors.ytm = undefined;
-  state.busy.ytm = 'Reading your library…';
+  if (!state.google) return;
+  // Request the token first, still inside the click, so the popup isn't blocked.
+  const tokenPromise = requestToken(state.google);
+  state.busy.ytm = 'Waiting for Google sign-in…';
   render();
   try {
-    const collections = await send({ type: 'listCollections', platform: 'ytm' });
-    const snapshots: CollectionSnapshot[] = [];
-    for (const [i, c] of collections.entries()) {
-      state.busy.ytm = `Reading “${c.name}” (${i + 1} of ${collections.length})…`;
-      render();
-      const tracks = await send({ type: 'listTracks', platform: 'ytm', collectionId: c.id });
-      snapshots.push({ collection: { ...c, trackCount: tracks.length }, tracks, fetchedAt: new Date().toISOString() });
-    }
+    const token = await tokenPromise; // kept only for this sync; it expires within the hour
+    const snapshots = await syncYouTube({
+      token,
+      onProgress: (m) => {
+        state.busy.ytm = m;
+        render();
+      },
+    });
     await deletePlatform('ytm');
     await saveSnapshots(snapshots);
   } catch (e) {
@@ -162,28 +152,32 @@ function status(p: Platform): Child {
 }
 
 function ytmCard(): HTMLElement {
+  const hasData = state.snapshots.some((s) => s.collection.platform === 'ytm');
   let action: Child;
-  if (!state.connector) {
-    action = h(
-      'p',
-      { class: 'hint' },
-      'Install the hovering.today connector for Chrome to read your YouTube Music likes and playlists. ',
-      'It uses the session you’re already signed in with, from your browser.',
-    );
-  } else if (!state.ytm?.permitted) {
+  if (!GOOGLE_CLIENT_ID) {
+    action = h('p', { class: 'hint' }, 'Google sign-in isn’t set up on this site yet.');
+  } else {
     action = h(
       'button',
-      {
-        onclick: async () => {
-          await send({ type: 'connect', platform: 'ytm' }).catch(() => {});
-        },
-      },
-      'Connect YouTube Music',
+      { onclick: syncYtm, disabled: !state.google || !!state.busy.ytm },
+      hasData ? 'Sync again' : 'Sign in with Google',
     );
-  } else {
-    action = h('button', { onclick: syncYtm, disabled: !!state.busy.ytm }, state.snapshots.some((s) => s.collection.platform === 'ytm') ? 'Sync again' : 'Sync library');
   }
-  return h('section', { class: 'card ytm' }, h('h3', {}, PLATFORM_LABELS.ytm), action, status('ytm'), summary('ytm'));
+  return h(
+    'section',
+    { class: 'card ytm' },
+    h('h3', {}, PLATFORM_LABELS.ytm),
+    h(
+      'p',
+      { class: 'hint' },
+      'Read-only access to your liked music and playlists, kept only in this browser. Uses YouTube API Services; by signing in you agree to the ',
+      h('a', { href: 'https://www.youtube.com/t/terms', target: '_blank', rel: 'noopener' }, 'YouTube Terms of Service'),
+      '.',
+    ),
+    action,
+    status('ytm'),
+    summary('ytm'),
+  );
 }
 
 function spotifyCard(): HTMLElement {
@@ -349,9 +343,16 @@ function render() {
   );
 }
 
-// The connect page opens in a new tab; re-check permissions when the user comes back.
-window.addEventListener('focus', () => void refreshConnector());
-
 render();
 void reload();
-void refreshConnector();
+if (GOOGLE_CLIENT_ID) {
+  loadGoogle()
+    .then((g) => {
+      state.google = g;
+      render();
+    })
+    .catch((e) => {
+      state.errors.ytm = describeError(e);
+      render();
+    });
+}

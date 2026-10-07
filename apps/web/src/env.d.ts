@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  /** Chrome extension ID of the hovering.today connector. */
-  readonly VITE_CONNECTOR_ID?: string;
+  /** OAuth client ID for Google sign-in (YouTube Music). Public by design. */
+  readonly VITE_GOOGLE_CLIENT_ID?: string;
 }

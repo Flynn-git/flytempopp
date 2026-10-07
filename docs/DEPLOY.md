@@ -12,8 +12,6 @@ SoundCloud sign-in needs a token-exchange endpoint, it can be added to this same
 | Pull request | Same checks, then a **preview** at `https://pr-<n>-hovering-today.<your-subdomain>.workers.dev`. Production is untouched. Previews start working after the first production deploy, since they're versions of the existing site. |
 | Secrets not set yet, or a PR from a fork | Checks run; deploy is skipped with a notice (no red CI) |
 
-Each run also uploads the built connector extension as a `connector` artifact.
-
 ## One-time setup
 
 ### 1. Put hovering.today on Cloudflare
@@ -38,7 +36,6 @@ Repo → **Settings → Secrets and variables → Actions**:
 |---|---|---|
 | Secret | `CLOUDFLARE_API_TOKEN` | the token from step 2 |
 | Secret | `CLOUDFLARE_ACCOUNT_ID` | dashboard → **Workers & Pages** → Account ID (right-hand side) |
-| Variable | `CONNECTOR_ID` | the connector's Chrome Web Store ID, once published (optional until then) |
 
 ### 4. Deploy
 Merge to `main`. PR previews only start working after this first production deploy. The first deploy creates the `hovering-today` Worker
@@ -56,5 +53,22 @@ npx wrangler dev          # serves dist with production headers at http://localh
 npx wrangler deploy --dry-run   # validates config without an account
 ```
 
-Previews can't talk to the connector extension. It only accepts hovering.today (and localhost in dev
-builds). Use production or local dev to test connector flows.
+Google sign-in only works on origins listed on the OAuth client (hovering.today and localhost:5173), so it
+won't work on PR preview URLs. Test it on production or locally.
+
+## Google sign-in (YouTube Music)
+
+1. https://console.cloud.google.com → new project `hovering-today`.
+2. Enable **YouTube Data API v3**.
+3. **Google Auth Platform** → Get started: app name `hovering.today`, audience **External**.
+4. **Branding**: home page `https://hovering.today`, privacy policy `https://hovering.today/privacy`,
+   authorized domain `hovering.today`.
+5. **Data Access**: add the scope `.../auth/youtube.readonly`.
+6. **Audience** → Test users: add the Google accounts that should be able to sign in before verification.
+7. **Clients** → Create client → Web application. Authorized JavaScript origins: `https://hovering.today`,
+   `http://localhost:5173`. No redirect URIs.
+8. The client ID lives in `apps/web/.env.production` (it's public by design). For local dev, copy it into
+   `apps/web/.env.local`. There is no client secret to store.
+
+To let anyone sign in, submit the app for verification under Google Auth Platform → Verification Center
+(see `docs/ARCHITECTURE.md`).
