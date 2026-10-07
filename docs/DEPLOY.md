@@ -36,7 +36,6 @@ Repo → **Settings → Secrets and variables → Actions**:
 |---|---|---|
 | Secret | `CLOUDFLARE_API_TOKEN` | the token from step 2 |
 | Secret | `CLOUDFLARE_ACCOUNT_ID` | dashboard → **Workers & Pages** → Account ID (right-hand side) |
-| Variable | `GOOGLE_CLIENT_ID` | the Google OAuth client ID (see "Google sign-in" below) |
 
 ### 4. Deploy
 Merge to `main`. PR previews only start working after this first production deploy. The first deploy creates the `hovering-today` Worker
@@ -68,8 +67,8 @@ won't work on PR preview URLs. Test it on production or locally.
 6. **Audience** → Test users: add the Google accounts that should be able to sign in before verification.
 7. **Clients** → Create client → Web application. Authorized JavaScript origins: `https://hovering.today`,
    `http://localhost:5173`. No redirect URIs.
-8. Put the client ID in the `GOOGLE_CLIENT_ID` repo variable (and `VITE_GOOGLE_CLIENT_ID` in
-   `apps/web/.env.local` for local dev). There is no client secret to store.
+8. The client ID lives in `apps/web/.env.production` (it's public by design). For local dev, copy it into
+   `apps/web/.env.local`. There is no client secret to store.
 
 To let anyone sign in, submit the app for verification under Google Auth Platform → Verification Center
 (see `docs/ARCHITECTURE.md`).

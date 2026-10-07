@@ -15,9 +15,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      # Google OAuth client ID for YouTube Music sign-in (repo Settings → Variables). Public by design.
-      VITE_GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
